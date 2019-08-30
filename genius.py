@@ -5,7 +5,8 @@ import Adafruit_BBIO.ADC as ADC
 import time
 import random
 
-#GPIO's
+#GPIO
+
 b0 = "P8_7"
 b1 = "P8_8"
 b2 = "P8_9"
@@ -27,6 +28,7 @@ on = "P9_27"
 
 #LED VECTOR
 LEDS = [l0,l1,l2]
+#DISPLAY LEDS VECTOR
 display = [da,db,dc,dd,de,df,dg]
 
 game_sequence = []
@@ -100,28 +102,27 @@ def blink(led,tempo):
     GPIO.output(led, GPIO.LOW)
     time.sleep(tempo)
 
-def flag():
+def transition_blink():
     blink(on,0.5)
-    blink(off,0.5)
     blink(on,0.5)
-    blink(off,0.5)
+    blink(on,0.5)
+    GPIO.output(on, GPIO.LOW)
+    time.sleep(0.5)
 
 def generate_round():
-    #Start with 1 led e add more one every round
     current_led = random.randint(0,2)
     game_sequence.append(current_led)
     for count in range(0,current_round):
         blink(LEDS[game_sequence[count]],0.5)
-        #add leds in the sequence    
 
-def get_play():
+def get_player_sequence():
     if(current_round > 1):
         del player_sequence[:]
     number_of_plays = 0
     play_time_begin = time.time() #Return the number of seconds since epoch
     play_time_end = time.time()
 
-    while((play_time_end - play_time_begin) < current_round + 3):
+    while((play_time_end - play_time_begin) < current_round + 5):
 
         if(GPIO.input(b0)):
             player_sequence.append(0)
@@ -161,14 +162,10 @@ while True:
         show_points(player_points)
         GPIO.output(on, GPIO.HIGH)
         GPIO.output(off, GPIO.LOW)
-        flag()
+        transition_blink()
         while game_started:
             generate_round()    
-            
-            #Detect player's play
-            get_play()
-
-            #DEBUG
+            get_player_sequence()
             print(game_sequence)
             print(player_sequence)
 
@@ -177,6 +174,6 @@ while True:
                     blink(off,0.1)
 
             player_points +=1
-            flag()
             show_points(player_points)
+            transition_blink()
             current_round += 1
